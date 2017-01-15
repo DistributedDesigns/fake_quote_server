@@ -9,7 +9,7 @@ AFAIK the quote server has no published API or other docs ([this][quote-server-c
 _TBD_
 
 #### Local Usage
-Start the server and stablish a socket connection and send a formatted req `stock_symbol,user_id`:
+Start the server, establish a socket connection and send a formatted request: `stock_symbol,user_id`.
 ```bash
 go run server.go
 
@@ -19,7 +19,7 @@ echo "XYZ,cool_user" | nc localhost 4444
 # server sends
 729.99,XYZ,cool_user,1484459366,WFlaY29vbF91c2Vy77+9
 ```
-Return format is `quote,stock_symbol,user_id,timestamp,cryptokey`.
+Return format is: `quote,stock_symbol,user_id,timestamp,cryptokey`.
 
 [go-tcp-server-blog]: https://coderwall.com/p/wohavg/creating-a-simple-tcp-server-in-go
 [quote-server-client]: http://www.ece.uvic.ca/~seng462/ProjectWebSite/ClientThread.py
