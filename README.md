@@ -1,9 +1,9 @@
 Fake Quote Server
 =====
 
-Mimics the behavior of the day trading quote server, which is only accessible on UVic VPN. Most of the implementation references this blog [post](go-tcp-server-blog). Probably useful to local dev and testing.
+Mimics the behavior of the day trading quote server, which is only accessible on UVic VPN. Most of the implementation references this blog [post][go-tcp-server-blog]. Probably useful to local dev and testing.
 
-AFAIK the quote server has no published API or other docs ([this](quote-server-client) is all I'm going on) so this implementation probably doesn't handle error conditions correctly. I'll update it as I figure out more of the behavior.
+AFAIK the quote server has no published API or other docs ([this][quote-server-client] is all I'm going on) so this implementation probably doesn't handle error conditions correctly. I'll update it as I figure out more of the behavior.
 
 #### Installing from Docker
 _TBD_
