@@ -6,6 +6,6 @@ RUN go build \
   -o $GOPATH/bin/fake-quoteserv \
   $GOPATH/src/fake-quoteserv/server.go
 
-EXPOSE 4444
+EXPOSE 4443
 
 CMD $GOPATH/bin/fake-quoteserv

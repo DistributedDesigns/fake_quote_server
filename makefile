@@ -1,5 +1,5 @@
 IMG_NAME = quoteserv
-PORT = 4444
+PORT = 4443
 
 .PHONY: run start stop clean tail
 

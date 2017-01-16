@@ -14,7 +14,7 @@ Start the server, establish a socket connection and send a formatted request: `s
 go run server.go
 
 # in another window
-echo "XYZ,cool_user" | nc localhost 4444
+echo "XYZ,cool_user" | nc localhost 4443
 
 # server sends
 729.99,XYZ,cool_user,1484459366,WFlaY29vbF91c2Vy77+9
