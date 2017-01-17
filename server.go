@@ -111,6 +111,14 @@ func parseReq(buff []byte) (quoteRequest, error) {
 }
 
 func makeResp(req quoteRequest) quoteResponse {
+	// Only use the first 3 char of a stock
+	var truncatedStock string
+	if stockLen := len(req.stock); stockLen < 3 {
+		truncatedStock = req.stock[:stockLen]
+	} else {
+		truncatedStock = req.stock[:3]
+	}
+
 	// Send back current server time
 	nowUnix := time.Now().Unix()
 
@@ -123,7 +131,7 @@ func makeResp(req quoteRequest) quoteResponse {
 
 	return quoteResponse{
 		quote:     1000 * rand.Float32(),
-		stock:     req.stock,
+		stock:     strings.ToUpper(truncatedStock),
 		userID:    req.userID,
 		timestamp: nowUnix,
 		cyrptokey: cryptokey,
