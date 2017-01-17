@@ -84,6 +84,12 @@ func generateQuote(conn net.Conn) {
 	// use request to generate values for response
 	resp := makeResp(req)
 
+	// Delay for 1->4s before sending back the quote.
+	// Delay periods have uniform probability.
+	delayPeriod := time.Duration(rand.Intn(4) + 1)
+	respDelayTimer := time.NewTimer(time.Second * delayPeriod)
+	<-respDelayTimer.C
+
 	// Send back the quote
 	conn.Write([]byte(resp.ToCSVString()))
 
