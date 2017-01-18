@@ -84,6 +84,12 @@ func generateQuote(conn net.Conn) {
 	// use request to generate values for response
 	resp := makeResp(req)
 
+	// Delay for 1->4s before sending back the quote.
+	// Delay periods have uniform probability.
+	delayPeriod := time.Duration(rand.Intn(4) + 1)
+	respDelayTimer := time.NewTimer(time.Second * delayPeriod)
+	<-respDelayTimer.C
+
 	// Send back the quote
 	conn.Write([]byte(resp.ToCSVString()))
 
@@ -111,6 +117,14 @@ func parseReq(buff []byte) (quoteRequest, error) {
 }
 
 func makeResp(req quoteRequest) quoteResponse {
+	// Only use the first 3 char of a stock
+	var truncatedStock string
+	if stockLen := len(req.stock); stockLen < 3 {
+		truncatedStock = req.stock[:stockLen]
+	} else {
+		truncatedStock = req.stock[:3]
+	}
+
 	// Send back current server time
 	nowUnix := time.Now().Unix()
 
@@ -123,7 +137,7 @@ func makeResp(req quoteRequest) quoteResponse {
 
 	return quoteResponse{
 		quote:     1000 * rand.Float32(),
-		stock:     req.stock,
+		stock:     strings.ToUpper(truncatedStock),
 		userID:    req.userID,
 		timestamp: nowUnix,
 		cyrptokey: cryptokey,
