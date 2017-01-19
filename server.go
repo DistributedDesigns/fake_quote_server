@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"encoding/base64"
 	"errors"
+	"flag"
 	"fmt"
 	"math/rand"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"time"
-	"flag"
-	"strconv"
 )
 
 const (
@@ -103,6 +103,9 @@ func generateQuote(conn net.Conn) {
 
 	// Delay for 1->4s before sending back the quote.
 	// Delay periods have uniform probability.
+	if len(flag.Args()) == 0 {
+		delayVal = rand.Intn(4) + 1
+	}
 	delayPeriod := time.Duration(delayVal)
 	respDelayTimer := time.NewTimer(time.Second * delayPeriod)
 	<-respDelayTimer.C
