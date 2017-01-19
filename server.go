@@ -10,6 +10,8 @@ import (
 	"os"
 	"strings"
 	"time"
+	"flag"
+	"strconv"
 )
 
 const (
@@ -31,11 +33,25 @@ type quoteResponse struct {
 	cyrptokey string
 }
 
+var (
+	delayVal = rand.Intn(4) + 1
+)
+
 func main() {
 	// If we don't provide a seed for rand then it hehaves as if
 	// we ran Seed(1). It's not safe to run this in concurrent
 	// code so I'm doing it here!
+	flag.Parse()
 	rand.Seed(time.Now().Unix())
+
+	if len(flag.Args()) != 0 {
+		parsedVal, err := strconv.Atoi(flag.Args()[0])
+		if err != nil {
+			fmt.Println("Invalid delay specified")
+			return
+		}
+		delayVal = parsedVal
+	}
 
 	// Accept incoming connections
 	l, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
@@ -57,9 +73,10 @@ func main() {
 
 		//logs an incoming message
 		fmt.Printf("Received message %s -> %s \n", conn.RemoteAddr(), conn.LocalAddr())
-
+		fmt.Printf("Waiting %d seconds\n", delayVal)
 		// Use concurrent goroutines to serve connections
 		go generateQuote(conn)
+
 	}
 }
 
@@ -86,11 +103,12 @@ func generateQuote(conn net.Conn) {
 
 	// Delay for 1->4s before sending back the quote.
 	// Delay periods have uniform probability.
-	delayPeriod := time.Duration(rand.Intn(4) + 1)
+	delayPeriod := time.Duration(delayVal)
 	respDelayTimer := time.NewTimer(time.Second * delayPeriod)
 	<-respDelayTimer.C
 
 	// Send back the quote
+	fmt.Printf("Response sent to %s", conn.RemoteAddr())
 	conn.Write([]byte(resp.ToCSVString()))
 
 	// Don't need this anymore
