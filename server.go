@@ -100,15 +100,17 @@ func generateQuote(conn net.Conn) {
 	// use request to generate values for response
 	resp := makeResp(req)
 
-	// Delay for 1->4s before sending back the quote.
-	// Delay periods have uniform probability.
+	// Use the user delay, if it exists
 	if len(flag.Args()) == 0 {
+		// Delay for 1->4s before sending back the quote.
+		// Delay periods have uniform probability.
 		delayVal = rand.Intn(4) + 1
 	}
 	delayPeriod := time.Duration(delayVal)
 	respDelayTimer := time.NewTimer(time.Second * delayPeriod)
-	<-respDelayTimer.C
 	fmt.Printf("Waiting %d seconds\n", delayVal)
+	<-respDelayTimer.C
+
 	// Send back the quote
 	fmt.Printf("Response sent to %s", conn.RemoteAddr())
 	conn.Write([]byte(resp.ToCSVString()))
