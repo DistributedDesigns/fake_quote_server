@@ -73,7 +73,6 @@ func main() {
 
 		//logs an incoming message
 		fmt.Printf("Received message %s -> %s \n", conn.RemoteAddr(), conn.LocalAddr())
-		fmt.Printf("Waiting %d seconds\n", delayVal)
 		// Use concurrent goroutines to serve connections
 		go generateQuote(conn)
 
@@ -109,7 +108,7 @@ func generateQuote(conn net.Conn) {
 	delayPeriod := time.Duration(delayVal)
 	respDelayTimer := time.NewTimer(time.Second * delayPeriod)
 	<-respDelayTimer.C
-
+	fmt.Printf("Waiting %d seconds\n", delayVal)
 	// Send back the quote
 	fmt.Printf("Response sent to %s", conn.RemoteAddr())
 	conn.Write([]byte(resp.ToCSVString()))
