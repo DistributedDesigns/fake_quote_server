@@ -25,7 +25,7 @@ var (
 	// parsed command line args
 	delayRange  = kingpin.Flag("delay-range", "Upper limit of random delay added to response").Default("3").Short('r').Int()
 	delayOffset = kingpin.Flag("delay-offset", "Constant delay for all responses").Default("0").Short('o').Uint()
-	fixedPrice  = kingpin.Flag("fixed-price", "Constant price for all stocks").Default("0.00").PlaceHolder("314.15").Short('p').Float32()
+	fixedPrice  = kingpin.Flag("fixed-price", "Constant price for all stocks. No fixed price when omitted.").Default("0.00").PlaceHolder("314.15").Short('p').Float32()
 )
 
 type quoteRequest struct {
