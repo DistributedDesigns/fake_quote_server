@@ -4,20 +4,28 @@ import (
 	"bytes"
 	"encoding/base64"
 	"errors"
-	"flag"
 	"fmt"
 	"math/rand"
 	"net"
 	"os"
-	"strconv"
 	"strings"
 	"time"
+
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 const (
-	CONN_HOST = "localhost"
-	CONN_PORT = "4443"
-	CONN_TYPE = "tcp"
+	// Address that will respond to quote requests
+	host     string = "localhost"
+	port     string = "4443"
+	protocol string = "tcp"
+)
+
+var (
+	// parsed command line args
+	delayRange  = kingpin.Flag("delay-range", "Upper limit of random delay added to response").Default("3").Short('r').Int()
+	delayOffset = kingpin.Flag("delay-offset", "Constant delay for all responses").Default("0").Short('o').Uint()
+	fixedPrice  = kingpin.Flag("fixed-price", "Constant price for all stocks").Default("0.00").PlaceHolder("314.15").Short('p').Float32()
 )
 
 type quoteRequest struct {
@@ -33,35 +41,23 @@ type quoteResponse struct {
 	cyrptokey string
 }
 
-var (
-	delayVal = rand.Intn(4) + 1
-)
-
 func main() {
+	kingpin.Parse()
+
 	// If we don't provide a seed for rand then it hehaves as if
 	// we ran Seed(1). It's not safe to run this in concurrent
 	// code so I'm doing it here!
-	flag.Parse()
 	rand.Seed(time.Now().Unix())
 
-	if len(flag.Args()) != 0 {
-		parsedVal, err := strconv.Atoi(flag.Args()[0])
-		if err != nil {
-			fmt.Println("Invalid delay specified")
-			return
-		}
-		delayVal = parsedVal
-	}
-
 	// Accept incoming connections
-	l, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
+	l, err := net.Listen(protocol, host+":"+port)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
 	defer l.Close()
 
-	fmt.Println("Listening on", CONN_HOST+":"+CONN_PORT)
+	fmt.Println("Listening on", l.Addr())
 
 	// Send active connections off for handing
 	for {
@@ -100,19 +96,24 @@ func generateQuote(conn net.Conn) {
 	// use request to generate values for response
 	resp := makeResp(req)
 
-	// Use the user delay, if it exists
-	if len(flag.Args()) == 0 {
-		// Delay for 1->4s before sending back the quote.
-		// Delay periods have uniform probability.
-		delayVal = rand.Intn(4) + 1
+	// Check if user wants random delay
+	var randomDelay int
+	if *delayRange <= 0 {
+		randomDelay = 0
+	} else {
+		// Intepret --delay-range=3 as "I want up to and including 3sec delay".
+		// Bounds for Intn are [0, n) so add 1 to get bounds [0, n]
+		randomDelay = rand.Intn(*delayRange + 1)
 	}
-	delayPeriod := time.Duration(delayVal)
+	delayPeriod := time.Duration(*delayOffset + uint(randomDelay))
 	respDelayTimer := time.NewTimer(time.Second * delayPeriod)
-	fmt.Printf("Waiting %d seconds\n", delayVal)
+	fmt.Printf("Waiting %d seconds\n", delayPeriod)
+
+	// Halt execution until timer expires
 	<-respDelayTimer.C
 
 	// Send back the quote
-	fmt.Printf("Response sent to %s", conn.RemoteAddr())
+	fmt.Printf("Response sent to %s\n", conn.RemoteAddr())
 	conn.Write([]byte(resp.ToCSVString()))
 
 	// Don't need this anymore
@@ -139,6 +140,15 @@ func parseReq(buff []byte) (quoteRequest, error) {
 }
 
 func makeResp(req quoteRequest) quoteResponse {
+	// Check if the user wants a fixed or random price
+	var quotePrice float32
+	if *fixedPrice <= 0 {
+		// default, invalid case: user wants random price
+		quotePrice = rand.Float32() * 1000
+	} else {
+		quotePrice = *fixedPrice
+	}
+
 	// Only use the first 3 char of a stock
 	var truncatedStock string
 	if stockLen := len(req.stock); stockLen < 3 {
@@ -158,7 +168,7 @@ func makeResp(req quoteRequest) quoteResponse {
 	cryptokey := base64.StdEncoding.EncodeToString([]byte(seed))
 
 	return quoteResponse{
-		quote:     1000 * rand.Float32(),
+		quote:     quotePrice,
 		stock:     strings.ToUpper(truncatedStock),
 		userID:    req.userID,
 		timestamp: nowUnix,
