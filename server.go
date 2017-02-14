@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log"
 	"math/rand"
 	"net"
 	"os"
@@ -52,23 +53,23 @@ func main() {
 	// Accept incoming connections
 	l, err := net.Listen(protocol, host+":"+port)
 	if err != nil {
-		fmt.Println("Error listening:", err.Error())
+		log.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
 	defer l.Close()
 
-	fmt.Println("Listening on", l.Addr())
+	log.Println("Listening on", l.Addr())
 
 	// Send active connections off for handing
 	for {
 		conn, err := l.Accept()
 		if err != nil {
-			fmt.Println("Error accepting:", err.Error())
+			log.Println("Error accepting:", err.Error())
 			os.Exit(2)
 		}
 
 		//logs an incoming message
-		fmt.Printf("Received message %s -> %s \n", conn.RemoteAddr(), conn.LocalAddr())
+		log.Printf("Received message %s -> %s \n", conn.RemoteAddr(), conn.LocalAddr())
 		// Use concurrent goroutines to serve connections
 		go generateQuote(conn)
 
@@ -80,7 +81,7 @@ func generateQuote(conn net.Conn) {
 	buff := make([]byte, 1024)
 	_, err := conn.Read(buff)
 	if err != nil {
-		fmt.Println("Error reading:", err.Error())
+		log.Println("Error reading:", err.Error())
 		conn.Close()
 		return
 	}
@@ -88,7 +89,7 @@ func generateQuote(conn net.Conn) {
 	req, err := parseReq(buff)
 	if err != nil {
 		// bail on the connection if it has a malformed request
-		fmt.Println("Error parsing request:", err.Error())
+		log.Println("Error parsing request:", err.Error())
 		conn.Close()
 		return
 	}
@@ -107,13 +108,13 @@ func generateQuote(conn net.Conn) {
 	}
 	delayPeriod := time.Duration(*delayOffset + uint(randomDelay))
 	respDelayTimer := time.NewTimer(time.Second * delayPeriod)
-	fmt.Printf("Waiting %d seconds\n", delayPeriod)
+	log.Printf("Waiting %d seconds\n", delayPeriod)
 
 	// Halt execution until timer expires
 	<-respDelayTimer.C
 
 	// Send back the quote
-	fmt.Printf("Response sent to %s\n", conn.RemoteAddr())
+	log.Printf("Response sent to %s\n", conn.RemoteAddr())
 	conn.Write([]byte(resp.ToCSVString()))
 
 	// Don't need this anymore
