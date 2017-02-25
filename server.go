@@ -158,21 +158,21 @@ func makeResp(req quoteRequest) quoteResponse {
 		truncatedStock = req.stock[:3]
 	}
 
-	// Send back current server time
-	nowUnix := time.Now().Unix()
+	// Send back current server time in ms
+	nowUnixMilli := time.Now().UnixNano() / 1e6
 
 	// The cryptokey will be base64(stock + user + now)
 	// FIXME: The output from this doesn't change as often as
 	// it should. Lots of eHl6dG9t77+9. Should probably learn what
 	// this does at some point.
-	seed := req.stock + req.userID + string(nowUnix)
+	seed := req.stock + req.userID + string(nowUnixMilli)
 	cryptokey := base64.StdEncoding.EncodeToString([]byte(seed))
 
 	return quoteResponse{
 		quote:     quotePrice,
 		stock:     strings.ToUpper(truncatedStock),
 		userID:    req.userID,
-		timestamp: nowUnix,
+		timestamp: nowUnixMilli,
 		cyrptokey: cryptokey,
 	}
 }
